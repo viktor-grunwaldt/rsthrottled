@@ -8,8 +8,7 @@ edition = "2021"
 [target.x86_64-unknown-linux-gnu.dependencies]
 dbus = "0.9.7"
 glib = "0.20.10"
-
-[dependencies]
 flate2 = "1.1.2"
 libc = "0.2.174"
 log = "0.4.27"
+num_cpus = "1.17.0"
