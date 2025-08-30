@@ -33,40 +33,6 @@ impl Config {
     }
 }
 
-fn main() {
-    let args = parse_args();
-
-    let cpuid: Option<CpuId> = if !args.force {
-        check_kernel();
-        Some(check_cpu().unwrap_or_else(|| fatal("Unable to identify CPU model.")))
-    } else {
-        None
-    };
-    let family_name = cpuid.and_then(|x| CPUMAP.get(&x));
-    match family_name {
-        Some(name) => info!("Detected CPU architecture: Intel {}", name),
-        None => fatal("Your CPU model is not supported."),
-    };
-
-    set_msr_allow_writes();
-    let test_msr = Arc::new(Mutex::new(false));
-    let mut unsupported_features: Vec<&'static str> = vec![];
-    test_msr_rw_capabilities(test_msr, &mut unsupported_features);
-    // dbus stuff
-    let power_source = get_power_source();
-    let platform_info = get_platform_info();
-    let config = parse_config();
-    let regs = get_reg_values();
-
-    let _ = get_undervolt(&unsupported_features, None, false, test_msr);
-    set_icc_max();
-    set_hwp();
-
-    // start glib loop
-    let main_loop = MainLoop::new(None, false);
-    main_loop.run();
-}
-
 // fn read_supported_cpus(x: &CPU_Id) -> Option<&'static str> {
 static CPUMAP: LazyLock<HashMap<CpuId, &'static str>> = LazyLock::new(|| {
     HashMap::from([
@@ -489,7 +455,7 @@ fn check_kernel() {
             let proc_config = File::open("/proc/config.gz")?;
             let mut proc_gz = GzDecoder::new(proc_config);
             let mut buf = String::new();
-            Command::new("modprobe").arg("configs").status();
+            Command::new("modprobe").arg("configs").status()?;
             proc_gz.read_to_string(&mut buf).map(|_| buf)
         });
     let data =
@@ -507,7 +473,7 @@ fn check_cpu() -> Option<CpuId> {
     let mut f =
         File::open("/proc/cpuinfo").unwrap_or_else(|_| fatal("Unable to identify CPU model."));
     let mut buf = String::new();
-    f.read_to_string(&mut buf);
+    f.read_to_string(&mut buf).ok()?;
     let cpuinfo: HashMap<&str, &str> = buf.lines().flat_map(|l| l.split_once(':')).collect();
     if cpuinfo
         .get("vendor_id")
@@ -519,4 +485,38 @@ fn check_cpu() -> Option<CpuId> {
     let model = cpuinfo.get("model")?.parse().ok()?;
     let stepping = cpuinfo.get("stepping")?.parse().ok()?;
     Some((cpu_family, model, stepping))
+}
+
+fn main() {
+    let args = parse_args();
+
+    let cpuid: Option<CpuId> = if !args.force {
+        check_kernel();
+        Some(check_cpu().unwrap_or_else(|| fatal("Unable to identify CPU model.")))
+    } else {
+        None
+    };
+    let family_name = cpuid.and_then(|x| CPUMAP.get(&x));
+    match family_name {
+        Some(name) => info!("Detected CPU architecture: Intel {}", name),
+        None => fatal("Your CPU model is not supported."),
+    };
+
+    set_msr_allow_writes();
+    let test_msr = Arc::new(Mutex::new(false));
+    let mut unsupported_features: Vec<&'static str> = vec![];
+    test_msr_rw_capabilities(test_msr, &mut unsupported_features);
+    // dbus stuff
+    let power_source = get_power_source();
+    let platform_info = get_platform_info();
+    let config = parse_config();
+    let regs = get_reg_values();
+
+    let _ = get_undervolt(&unsupported_features, None, false, test_msr);
+    set_icc_max();
+    set_hwp();
+
+    // start glib loop
+    let main_loop = MainLoop::new(None, false);
+    main_loop.run();
 }
