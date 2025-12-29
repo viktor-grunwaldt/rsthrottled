@@ -1,0 +1,210 @@
+{
+  "undervolt": [
+    {
+      "plane": "CORE",
+      "mv": -50,
+      "expected_hex": "0x80000011f9a00000"
+    },
+    {
+      "plane": "CORE",
+      "mv": -100,
+      "expected_hex": "0x80000011f3400000"
+    },
+    {
+      "plane": "CORE",
+      "mv": -125,
+      "expected_hex": "0x80000011f0000000"
+    },
+    {
+      "plane": "CORE",
+      "mv": -150,
+      "expected_hex": "0x80000011ecc00000"
+    },
+    {
+      "plane": "GPU",
+      "mv": -50,
+      "expected_hex": "0x80000111f9a00000"
+    },
+    {
+      "plane": "GPU",
+      "mv": -100,
+      "expected_hex": "0x80000111f3400000"
+    },
+    {
+      "plane": "GPU",
+      "mv": -125,
+      "expected_hex": "0x80000111f0000000"
+    },
+    {
+      "plane": "GPU",
+      "mv": -150,
+      "expected_hex": "0x80000111ecc00000"
+    },
+    {
+      "plane": "CACHE",
+      "mv": -50,
+      "expected_hex": "0x80000211f9a00000"
+    },
+    {
+      "plane": "CACHE",
+      "mv": -100,
+      "expected_hex": "0x80000211f3400000"
+    },
+    {
+      "plane": "CACHE",
+      "mv": -125,
+      "expected_hex": "0x80000211f0000000"
+    },
+    {
+      "plane": "CACHE",
+      "mv": -150,
+      "expected_hex": "0x80000211ecc00000"
+    },
+    {
+      "plane": "UNCORE",
+      "mv": -50,
+      "expected_hex": "0x80000311f9a00000"
+    },
+    {
+      "plane": "UNCORE",
+      "mv": -100,
+      "expected_hex": "0x80000311f3400000"
+    },
+    {
+      "plane": "UNCORE",
+      "mv": -125,
+      "expected_hex": "0x80000311f0000000"
+    },
+    {
+      "plane": "UNCORE",
+      "mv": -150,
+      "expected_hex": "0x80000311ecc00000"
+    },
+    {
+      "plane": "ANALOGIO",
+      "mv": -50,
+      "expected_hex": "0x80000411f9a00000"
+    },
+    {
+      "plane": "ANALOGIO",
+      "mv": -100,
+      "expected_hex": "0x80000411f3400000"
+    },
+    {
+      "plane": "ANALOGIO",
+      "mv": -125,
+      "expected_hex": "0x80000411f0000000"
+    },
+    {
+      "plane": "ANALOGIO",
+      "mv": -150,
+      "expected_hex": "0x80000411ecc00000"
+    }
+  ],
+  "iccmax": [
+    {
+      "plane": "CORE",
+      "amp": 30.0,
+      "expected_hex": "0x8000001700000078"
+    },
+    {
+      "plane": "CORE",
+      "amp": 64.0,
+      "expected_hex": "0x8000001700000100"
+    },
+    {
+      "plane": "CORE",
+      "amp": 95.5,
+      "expected_hex": "0x800000170000017e"
+    },
+    {
+      "plane": "CORE",
+      "amp": 120.0,
+      "expected_hex": "0x80000017000001e0"
+    },
+    {
+      "plane": "GPU",
+      "amp": 30.0,
+      "expected_hex": "0x8000011700000078"
+    },
+    {
+      "plane": "GPU",
+      "amp": 64.0,
+      "expected_hex": "0x8000011700000100"
+    },
+    {
+      "plane": "GPU",
+      "amp": 95.5,
+      "expected_hex": "0x800001170000017e"
+    },
+    {
+      "plane": "GPU",
+      "amp": 120.0,
+      "expected_hex": "0x80000117000001e0"
+    },
+    {
+      "plane": "CACHE",
+      "amp": 30.0,
+      "expected_hex": "0x8000021700000078"
+    },
+    {
+      "plane": "CACHE",
+      "amp": 64.0,
+      "expected_hex": "0x8000021700000100"
+    },
+    {
+      "plane": "CACHE",
+      "amp": 95.5,
+      "expected_hex": "0x800002170000017e"
+    },
+    {
+      "plane": "CACHE",
+      "amp": 120.0,
+      "expected_hex": "0x80000217000001e0"
+    }
+  ],
+  "time_windows": [
+    {
+      "input_sec": 0.001,
+      "mock_time_unit": 0.0009765625,
+      "expected_y": 0,
+      "expected_z": 1
+    },
+    {
+      "input_sec": 0.01,
+      "mock_time_unit": 0.0009765625,
+      "expected_y": 3,
+      "expected_z": 2
+    },
+    {
+      "input_sec": 0.5,
+      "mock_time_unit": 0.0009765625,
+      "expected_y": 9,
+      "expected_z": 0
+    },
+    {
+      "input_sec": 1.0,
+      "mock_time_unit": 0.0009765625,
+      "expected_y": 10,
+      "expected_z": 0
+    },
+    {
+      "input_sec": 5.0,
+      "mock_time_unit": 0.0009765625,
+      "expected_y": 12,
+      "expected_z": 1
+    },
+    {
+      "input_sec": 28.0,
+      "mock_time_unit": 0.0009765625,
+      "expected_y": 14,
+      "expected_z": 3
+    },
+    {
+      "input_sec": 64.0,
+      "mock_time_unit": 0.0009765625,
+      "expected_y": 16,
+      "expected_z": 0
+    }
+  ]
+}
