@@ -5,20 +5,24 @@ use std::{
     io::{self, Read, Seek, Write},
     path::{Path, PathBuf},
     process::Command,
+    rc::Rc,
     sync::{Arc, LazyLock, Mutex},
 };
 
+use configparser::ini::Ini;
 use flate2::read::GzDecoder;
 use glib::MainLoop;
 use libc::c_char;
 use log::{info, warn};
 type CpuId = (u8, u8, u8);
+
+#[derive(Clone, Debug)]
 struct Config {
-    log: Option<File>,
-    debug: bool,
-    monitor_ms: u64,
     config: PathBuf,
+    debug: bool,
     force: bool,
+    log: Option<Rc<File>>,
+    monitor_ms: u64,
 }
 
 impl Config {
@@ -174,11 +178,13 @@ static CURRENT_PLANES: LazyLock<HashMap<&'static str, u64>> =
 // }
 
 const TRIP_TEMP_RANGE: (i32, i32) = (40, 97);
-const UNDERVOLT_KEYS: (&str, &str, &str) = ("UNDERVOLT", "UNDERVOLT.AC", "UNDERVOLT.BATTERY");
-const ICCMAX_KEYS: (&str, &str, &str) = ("ICCMAX", "ICCMAX.AC", "ICCMAX.BATTERY");
+const UNDERVOLT_KEYS: [&str; 3] = ["UNDERVOLT", "UNDERVOLT.AC", "UNDERVOLT.BATTERY"];
+const ICCMAX_KEYS: [&str; 3] = ["ICCMAX", "ICCMAX.AC", "ICCMAX.BATTERY"];
 const HWP_PERFOLRMANCE_VALUE: i32 = 0x20;
 const HWP_DEFAULT_VALUE: i32 = 0x80;
 const HWP_INTERVAL: i32 = 60;
+const TRIP_TEMP_MIN: f64 = 40.0;
+const TRIP_TEMP_MAX: f64 = 97.0;
 
 fn parse_args() -> Config {
     Config::new()
@@ -228,8 +234,67 @@ fn get_platform_info() -> ! {
     todo!()
 }
 
-fn parse_config() -> ! {
-    todo!()
+type IniMap = HashMap<String, HashMap<String, Option<String>>>;
+
+fn load_config(args: Config) -> Result<IniMap, String> {
+    let mut ini = Ini::new();
+    let map = ini.load(args.config)?;
+    let opts = [
+        "Update_Rate_s",
+        "PL1_Tdp_W",
+        "PL1_Duration_s",
+        "PL2_Tdp_W",
+        "PL2_Duration_S",
+    ];
+    let tt = "Trip_Temp_C";
+    for power_source in ["AC", "BATTERY"] {
+        for option in opts {
+            if let Some(value) = ini.getfloat(power_source, option)? {
+                ini.set(power_source, option, Some(value.max(0.001).to_string()));
+            } else if option == "Update_Rate_s" {
+                fatal("The mandatory \"Update_Rate_s\" parameter is missing.");
+            }
+        }
+
+        if let Some(trip_temp) = ini.getfloat(power_source, tt)? {
+            let valid_trip_temp = trip_temp.clamp(TRIP_TEMP_MIN, TRIP_TEMP_MAX);
+            if valid_trip_temp != trip_temp {
+                warn!("{power_source} trip temp ({trip_temp}) not in valid range: [{TRIP_TEMP_MIN}, {TRIP_TEMP_MAX}], overriding");
+                ini.set(power_source, tt, Some(valid_trip_temp.to_string()));
+            }
+        }
+    }
+
+    // validate undervolt settings config
+    for key in UNDERVOLT_KEYS {
+        for plane in VOLTAGE_PLANES.keys() {
+            if !map.contains_key(key) {
+                continue;
+            }
+            let val = ini.getfloat(key, plane)?.unwrap_or_default();
+            let valid_val = val.min(0.0);
+            if val != valid_val {
+                warn!("Invalid {key} {plane} value: {val} (is positive), overriding");
+                ini.set(key, plane, Some(valid_val.to_string()));
+            }
+        }
+    }
+
+    // check if only one of "UNDERVOLT.AC", "UNDERVOLT.BATTERY" is set
+    if map.contains_key(UNDERVOLT_KEYS[1]) || map.contains_key(UNDERVOLT_KEYS[2]) {
+        for key in UNDERVOLT_KEYS.iter().skip(1) {
+            for plane in VOLTAGE_PLANES.keys() {
+                let val = ini.getfloat(key, plane)?;
+                if val.is_none() {
+                    ini.set(key, plane, Some((0.0).to_string()));
+                }
+            }
+        }
+    }
+
+    todo!();
+
+    Ok(map)
 }
 
 fn get_reg_values() -> ! {
@@ -532,7 +597,7 @@ pub fn main_loop() {
     // dbus stuff
     let power_source = get_power_source();
     let platform_info = get_platform_info();
-    let config = parse_config();
+    let config = load_config(args.clone());
     let regs = get_reg_values();
 
     let _ = get_undervolt(&unsupported_features, None, false, test_msr);

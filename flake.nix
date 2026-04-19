@@ -36,7 +36,11 @@
             "rust-analyzer"
           ];
         });
-
+        commonInputs = [
+          # Add additional build inputs here
+          pkgs.dbus
+          pkgs.glib
+        ];
         # Common arguments can be set here to avoid repeating them later
         # Note: changes here will rebuild all dependency crates
         commonArgs = {
@@ -45,12 +49,8 @@
           nativeBuildInputs = [
             pkgs.pkg-config
           ];
-          buildInputs =
-            [
-              # Add additional build inputs here
-              pkgs.dbus
-              pkgs.glib
-            ];
+          buildInputs = commonInputs ++ [
+          ];
         };
 
         my-crate = craneLib.buildPackage (
@@ -83,9 +83,7 @@
           # MY_CUSTOM_DEVELOPMENT_VAR = "something else";
 
           # Extra inputs can be added here; cargo and rustc are provided by default.
-          packages = [
-            # pkgs.ripgrep
-            # pkgs.rust-analyzer
+          packages = commonInputs ++ [
           ];
         };
       }
